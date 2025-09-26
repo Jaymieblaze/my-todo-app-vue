@@ -6,8 +6,8 @@ import Button from '../Button.vue';
 import TrashIcon from '../icons/TrashIcon.vue';
 import LoaderSpin from '../icons/LoaderSpin.vue';
 
-// Define the props the component accepts.
-const props = defineProps<{
+// Define the props the component accepts without assigning to an unused variable.
+defineProps<{
   isOpen: boolean;
   todo: Todo | null;
 }>();
@@ -18,15 +18,16 @@ const emit = defineEmits<{
   (e: 'deleteTodo'): void;
 }>();
 
-// State management for the deleting process
+// State management for the deleting process, like React's `useState`.
 const deleting = ref(false);
 const error = ref<string | null>(null);
 
-// Handler function for the delete action.
+// The handler function for the delete action.
 const handleDelete = async () => {
   deleting.value = true;
   error.value = null;
   try {
+    // Emit the 'deleteTodo' event to the parent component.
     emit('deleteTodo');
     emit('close'); // Close the modal on success
   } catch (e) {
@@ -62,3 +63,4 @@ const handleDelete = async () => {
     </div>
   </Dialog>
 </template>
+

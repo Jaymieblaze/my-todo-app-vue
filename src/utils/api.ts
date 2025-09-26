@@ -3,8 +3,9 @@ import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBa
 import { Todo } from './db';
 
 const todoConverter: FirestoreDataConverter<Todo> = {
-  fromFirestore: (snapshot: QueryDocumentSnapshot, options: SnapshotOptions): Todo => {
-    const data = snapshot.data(options);
+  // ## The 'options' parameter is now correctly marked as unused.
+  fromFirestore: (snapshot: QueryDocumentSnapshot, _options: SnapshotOptions): Todo => {
+    const data = snapshot.data(); // The options parameter is not needed here.
     return {
       id: snapshot.id,
       title: data.title || '',
@@ -19,11 +20,9 @@ const todoConverter: FirestoreDataConverter<Todo> = {
     };
   },
   
-  toFirestore: (todo: Partial<Todo>, options?: SetOptions): DocumentData => {
+  toFirestore: (todo: Partial<Todo>, _options?: SetOptions): DocumentData => {
     const { id, ...data } = todo;
 
-    // This check is crucial to prevent errors when a user doesn't set a due date.
-    // It removes the property if it's undefined before saving to Firestore.
     if (!data.dueDate) {
       delete data.dueDate;
     }

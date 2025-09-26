@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue';
-
-// Import the Vue components we've already created for the fallback UI
 import Card from './Card.vue';
 import CardHeader from './CardHeader.vue';
 import CardTitle from './CardTitle.vue';
@@ -9,17 +7,16 @@ import CardDescription from './CardDescription.vue';
 import CardContent from './CardContent.vue';
 import Button from './Button.vue';
 
-// Define the props the component accepts.
 const props = defineProps<{
   showDetails?: boolean;
 }>();
 
-// Define the reactive state for tracking errors
 const hasError = ref(false);
 const error = ref<Error | null>(null);
 const errorInfo = ref<string | null>(null);
 
-onErrorCaptured((err, instance, info) => {
+// Catches any errors from child components rendered in the <slot>.
+onErrorCaptured((err, _instance, info) => {
   console.error("Error captured in boundary:", err, info);
   hasError.value = true;
   error.value = err;

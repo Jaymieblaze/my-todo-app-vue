@@ -19,22 +19,15 @@ const router = useRouter();
 
 const isMenuOpen = ref(false);
 
-// This is the new, centralized logic for handling authentication on startup.
 onMounted(async () => {
-  // 1. Start listening for any auth changes. This will set loading to false when done.
   authStore.init();
-
-  // 2. Check if the user is returning from a Google Sign-In redirect.
   try {
     const result = await getRedirectResult(auth);
     if (result) {
-      // User has successfully signed in.
       const additionalInfo = getAdditionalUserInfo(result);
       if (additionalInfo?.isNewUser) {
-        // If it's a new user, create their dummy tasks.
         await createDummyTasks(result.user);
       }
-      // Navigate to the main app page.
       router.push('/todos');
     }
   } catch (error) {
@@ -44,9 +37,15 @@ onMounted(async () => {
 
 const isAuthPage = computed(() => route.path === '/login');
 
-const handleLogout = () => {
-  signOut(auth).catch(error => console.error("Failed to log out:", error));
-  isMenuOpen.value = false;
+const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    // ## This is the crucial fix: Navigate to the login page after sign-out.
+    router.push('/login');
+    isMenuOpen.value = false;
+  } catch (error) {
+    console.error("Failed to log out:", error);
+  }
 };
 
 const createDummyTasks = async (user: User) => {
@@ -59,7 +58,6 @@ const createDummyTasks = async (user: User) => {
 </script>
 
 <template>
-  <!-- The main loading spinner now also handles the redirect check -->
   <div v-if="authStore.loading" class="flex justify-center items-center h-screen bg-gray-100 dark:bg-slate-900">
     <LoaderSpin class="h-12 w-12 text-indigo-600" />
   </div>
@@ -76,7 +74,8 @@ const createDummyTasks = async (user: User) => {
           <div class="flex items-center gap-2">
             <!-- Desktop Menu -->
             <div class="hidden sm:flex items-center gap-4">
-              <span class="text-sm font-medium">{{ authStore.user.email }}</span>
+              <!-- Safety check for user email -->
+              <span v-if="authStore.user.email" class="text-sm font-medium">{{ authStore.user.email }}</span>
               <Button variant="secondary" size="sm" @click="handleLogout">Logout</Button>
             </div>
 
@@ -100,7 +99,7 @@ const createDummyTasks = async (user: User) => {
 
         <!-- Mobile Menu Dropdown -->
         <div v-if="isMenuOpen" class="sm:hidden absolute top-full left-0 right-0 bg-indigo-700 p-4 space-y-3 shadow-lg">
-            <div class="text-center text-sm font-medium border-b border-indigo-500 pb-3 mb-3">{{ authStore.user.email }}</div>
+            <div v-if="authStore.user.email" class="text-center text-sm font-medium border-b border-indigo-500 pb-3 mb-3">{{ authStore.user.email }}</div>
             <Button variant="secondary" class="w-full" @click="handleLogout">Logout</Button>
         </div>
     </header>
