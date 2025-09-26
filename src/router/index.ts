@@ -3,27 +3,47 @@ import { useAuthStore } from '../stores/auth';
 import AuthPage from '../views/AuthPage.vue';
 import TodosPage from '../views/TodosPage.vue';
 import TodoDetailPage from '../views/TodoDetailPage.vue';
-import NotFoundPage from '../views/NotFoundPage.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/login', name: 'login', component: AuthPage },
-    { path: '/todos', name: 'todos', component: TodosPage, meta: { requiresAuth: true } },
-    { path: '/todos/:todoId', name: 'todoDetail', component: TodoDetailPage, meta: { requiresAuth: true } },
-    { path: '/', redirect: '/todos' },
-    { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundPage },
+    {
+      path: '/',
+      name: 'auth',
+      component: AuthPage,
+      alias: '/login'
+    },
+    {
+      path: '/todos',
+      name: 'todos',
+      component: TodosPage,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/todos/:todoId',
+      name: 'todo-detail',
+      component: TodoDetailPage,
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
-// This navigation guard now runs on every navigation *after* the initial app load.
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  const requiresAuth = to.meta.requiresAuth;
+  
+  // Wait for Firebase to initialize before checking auth state
+  await authStore.init();
 
-  if (requiresAuth && !authStore.user) {
-    next({ name: 'login' });
+  const isAuthenticated = !!authStore.user;
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // User needs to be logged in but isn't. Redirect to auth page.
+    next({ name: 'auth' });
+  } else if (to.name === 'auth' && isAuthenticated) {
+    // User is logged in but trying to access the auth page. Redirect to todos.
+    next({ name: 'todos' });
   } else {
+    // All good, proceed.
     next();
   }
 });
