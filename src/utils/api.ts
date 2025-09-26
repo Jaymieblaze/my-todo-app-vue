@@ -3,9 +3,8 @@ import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBa
 import { Todo } from './db';
 
 const todoConverter: FirestoreDataConverter<Todo> = {
-  // ## The 'options' parameter is now correctly marked as unused.
   fromFirestore: (snapshot: QueryDocumentSnapshot, _options: SnapshotOptions): Todo => {
-    const data = snapshot.data(); // The options parameter is not needed here.
+    const data = snapshot.data();
     return {
       id: snapshot.id,
       title: data.title || '',
@@ -22,11 +21,9 @@ const todoConverter: FirestoreDataConverter<Todo> = {
   
   toFirestore: (todo: Partial<Todo>, _options?: SetOptions): DocumentData => {
     const { id, ...data } = todo;
-
     if (!data.dueDate) {
       delete data.dueDate;
     }
-
     return data;
   }
 };
@@ -70,6 +67,8 @@ export const performFirestoreOperation = async (
         updatedAt: new Date().toISOString(),
         dueDate: todo.dueDate,
         priority: todo.priority || 'low',
+        isSynced: 1,
+        isDeleted: 0,
       };
       await setDoc(newDocRef, newTodo);
       return newTodo;
@@ -99,12 +98,18 @@ export const addMultipleTodosToFirestore = async (userId: string, tasks: Omit<To
 
     tasks.forEach(task => {
         const newDocRef = doc(todosCollectionRef);
+        // ## This is the fix: Create a complete Todo object with all properties defined.
         const newTodo: Todo = {
-            ...task,
+            userId: task.userId || 1,
+            title: task.title || 'New AI Task',
+            completed: task.completed || false,
             id: newDocRef.id,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             priority: task.priority || 'low',
+            dueDate: task.dueDate,
+            isSynced: 1, // Default to synced
+            isDeleted: 0, // Default to not deleted
         };
         batch.set(newDocRef, newTodo);
         newTodos.push(newTodo);

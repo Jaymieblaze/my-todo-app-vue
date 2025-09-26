@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 // We'll assume you have a Pinia store for authentication
-// import { useAuthStore } from '../stores/auth'; 
+import { useAuthStore } from '../stores/auth'; 
 import { fetchTodoByIdFromFirestore } from '../utils/api';
 import type { Todo, Priority } from '../utils/db';
 import Button from '../components/Button.vue';
@@ -28,21 +28,19 @@ const router = useRouter();
 const todoId = route.params.todoId as string;
 
 // 3. AUTHENTICATION (like useAuth)
-// const authStore = useAuthStore();
-// const user = authStore.user; 
-// For now, we'll mock the user ID for simplicity
-const mockUserId = "mock-user-id"; 
+const authStore = useAuthStore();
+const user = computed(() => authStore.user); 
 
 
 // 4. DATA FETCHING (like useEffect)
 onMounted(async () => {
-  if (!mockUserId || !todoId) {
+  if (!user.value || !todoId) {
     error.value = new Error("User or Todo ID is missing.");
     loading.value = false;
     return;
   }
   try {
-    const data = await fetchTodoByIdFromFirestore(mockUserId, todoId);
+    const data = await fetchTodoByIdFromFirestore(user.value.uid, todoId);
     if (data) {
       todo.value = data;
     } else {

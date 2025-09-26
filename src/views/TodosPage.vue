@@ -6,6 +6,7 @@ import { firestore } from '../firebase';
 import type { Todo, Priority } from '../utils/db';
 import { addMultipleTodosToFirestore, performFirestoreOperation } from '../utils/api';
 import { useOnlineStatus } from '../composables/useOnlineStatus';
+import { useAuthStore } from '../stores/auth';
 
 // --- COMPONENT IMPORTS ---
 import Alert from '../components/Alert.vue';
@@ -33,8 +34,8 @@ import ArrowUpDownIcon from '../components/icons/ArrowUpDownIcon.vue';
 
 // --- STATE MANAGEMENT ---
 const router = useRouter();
-// In a real app, this would come from a Pinia store
-const user = ref({ uid: "mock-user-id", displayName: "Jaymie Blaze" }); 
+const authStore = useAuthStore();
+const user = computed(() => authStore.user);
 
 const todos = ref<Todo[]>([]);
 const loading = ref(true);
@@ -57,7 +58,11 @@ const ITEMS_PER_PAGE = 10;
 let unsubscribeFromTodos: () => void;
 
 onMounted(() => {
-  if (!user.value) return;
+  if (!user.value) {
+    // This might happen briefly on load, the watcher will pick it up
+    loading.value = false;
+    return;
+  }
   const todosCollectionRef = collection(firestore, `users/${user.value.uid}/todos`);
   unsubscribeFromTodos = onSnapshot(todosCollectionRef, (snapshot) => {
     todos.value = snapshot.docs.map(doc => {
