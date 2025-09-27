@@ -11,7 +11,6 @@ import {
   sendPasswordResetEmail,
   AuthError,
   User,
-  getAdditionalUserInfo,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { addMultipleTodosToFirestore } from '../utils/api';
@@ -89,8 +88,24 @@ const handleEmailSubmit = async () => {
       await sendEmailVerification(user);
       verificationSent.value = true;
     }
-  } catch (err) {
-    error.value = (err as AuthError).message;
+  } catch (err: any) {
+    switch (err.code) {
+      case 'auth/email-already-in-use':
+        error.value = "You’ve already registered with this email. Want to log in?";
+        break;
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        error.value = "Invalid email or password. Please try again.";
+        break;
+      case 'auth/invalid-email':
+        error.value = "The email address is not valid. Please check and try again.";
+        break;
+      case 'auth/too-many-requests':
+        error.value = "Too many attempts. Please wait a moment and try again.";
+        break;
+      default:
+        error.value = "Oops! Something went wrong. Please try again.";
+    }
   } finally {
     loading.value = false;
   }
@@ -100,12 +115,12 @@ const handleGoogleSignIn = async () => {
   loading.value = true;
   clearState();
   try {
-    const result = await signInWithPopup(auth, new GoogleAuthProvider());
-    const additionalInfo = getAdditionalUserInfo(result);
-    if (additionalInfo?.isNewUser) {
-      await createDummyTasks(result.user);
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    // Wait briefly for auth state to propagate (like React's context update)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (auth.currentUser) {
+      router.push('/todos');
     }
-    router.push('/todos');
   } catch (err) {
     error.value = (err as AuthError).message;
   } finally {
