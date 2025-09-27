@@ -35,7 +35,7 @@ onMounted(async () => {
   }
 });
 
-const isAuthPage = computed(() => route.path === '/login');
+const isAuthPage = computed(() => !!route.meta.isAuth);
 
 const handleLogout = async () => {
   try {

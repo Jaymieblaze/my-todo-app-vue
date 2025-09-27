@@ -11,6 +11,7 @@ const router = createRouter({
       path: '/',
       name: 'auth',
       component: AuthPage,
+      meta: { isAuth: true },
       alias: '/login'
     },
     {
