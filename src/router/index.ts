@@ -31,19 +31,18 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   
-  // Wait for Firebase to initialize before checking auth state
-  await authStore.init();
+  // Wait for initial auth state (if not already loaded)
+  if (authStore.loading) {
+    await authStore.init();
+  }
 
   const isAuthenticated = !!authStore.user;
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    // User needs to be logged in but isn't. Redirect to auth page.
     next({ name: 'auth' });
   } else if (to.name === 'auth' && isAuthenticated) {
-    // User is logged in but trying to access the auth page. Redirect to todos.
     next({ name: 'todos' });
   } else {
-    // All good, proceed.
     next();
   }
 });

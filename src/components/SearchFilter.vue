@@ -1,55 +1,60 @@
-<script setup lang="ts">
-import Input from './Input.vue';
-import Button from './Button.vue';
-
-type FilterStatus = 'all' | 'completed' | 'incomplete';
-
-defineProps<{
-  searchTerm: string;
-  filterStatus: FilterStatus;
-}>();
-
-
-const emit = defineEmits<{
-  (e: 'update:searchTerm', value: string): void;
-  (e: 'update:filterStatus', status: FilterStatus): void;
-}>();
-</script>
-
 <template>
-  <div class="flex flex-col sm:flex-row gap-4 sm:mb-0">
-    
-    <Input
-      type="text"
-      placeholder="Search todos by title..."
-      :value="searchTerm"
-      @input="emit('update:searchTerm', ($event.target as HTMLInputElement).value)"
-      class="flex-1"
-      aria-label="Search todos"
-    />
-    <div class="flex space-x-2">
-      
-      <Button
-        @click="emit('update:filterStatus', 'all')"
-        :variant="filterStatus === 'all' ? 'default' : 'outline'"
-        :aria-pressed="filterStatus === 'all'"
+  <div class="flex flex-col sm:flex-row gap-4">
+    <div class="flex-1">
+      <input
+        type="text"
+        :value="searchTerm"
+        @input="handleSearchChange"
+        placeholder="Search tasks..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
+      />
+    </div>
+    <div class="flex gap-2">
+      <button
+        @click="handleFilterChange('all')"
+        :class="filterStatus === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-300'"
+        class="px-4 py-2 rounded-md text-sm font-medium"
       >
         All
-      </Button>
-      <Button
-        @click="emit('update:filterStatus', 'completed')"
-        :variant="filterStatus === 'completed' ? 'default' : 'outline'"
-        :aria-pressed="filterStatus === 'completed'"
+      </button>
+      <button
+        @click="handleFilterChange('completed')"
+        :class="filterStatus === 'completed' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-300'"
+        class="px-4 py-2 rounded-md text-sm font-medium"
       >
         Completed
-      </Button>
-      <Button
-        @click="emit('update:filterStatus', 'incomplete')"
-        :variant="filterStatus === 'incomplete' ? 'default' : 'outline'"
-        :aria-pressed="filterStatus === 'incomplete'"
+      </button>
+      <button
+        @click="handleFilterChange('incomplete')"
+        :class="filterStatus === 'incomplete' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-300'"
+        class="px-4 py-2 rounded-md text-sm font-medium"
       >
         Incomplete
-      </Button>
+      </button>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+interface Props {
+  searchTerm: string;
+  filterStatus: 'all' | 'completed' | 'incomplete';
+}
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  'search-change': [value: string];
+  'filter-change': [status: 'all' | 'completed' | 'incomplete'];
+}>();
+
+// Methods for type-safe event handling
+const handleSearchChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  emit('search-change', target.value);
+};
+
+const handleFilterChange = (status: 'all' | 'completed' | 'incomplete') => {
+  emit('filter-change', status);
+};
+</script>
