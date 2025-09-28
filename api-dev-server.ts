@@ -1,5 +1,3 @@
-// api-dev-server.ts
-
 import express from 'express';
 import 'dotenv/config'; // Loads variables from .env file
 import Groq from 'groq-sdk';
