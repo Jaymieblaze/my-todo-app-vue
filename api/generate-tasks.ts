@@ -1,21 +1,28 @@
-console.log('GROQ_API_KEY:', process.env.GROQ_API_KEY);
+// in api/generate-tasks.ts
 
 import Groq from 'groq-sdk';
 
-// Vercel automatically makes this an edge function for speed
 export const config = {
   runtime: 'edge',
 };
 
-// Initialize the Groq client
+// ✅ FIX: Access the API key using import.meta.env for Edge Functions
+const groqApiKey = import.meta.env.GROQ_API_KEY;
+
+// Initialize the Groq client with the correctly accessed key
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: groqApiKey,
 });
 
 export default async function handler(request: Request) {
-  // Only allow POST requests
   if (request.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
+  }
+
+  // ✅ FIX: Add a check inside the handler to ensure the key was loaded
+  if (!groqApiKey) {
+    console.error('GROQ_API_KEY is not set in Vercel environment.');
+    return new Response(JSON.stringify({ error: 'API key is not configured.' }), { status: 500 });
   }
 
   try {
@@ -25,17 +32,11 @@ export default async function handler(request: Request) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400 });
     }
 
-    // Use the same prompt engineering as your Next.js project
     const fullPrompt = `Generate a list of 3-5 todo tasks based on the following prompt: "${prompt}". The output should be a clean, unformatted list of tasks. Each task should be separated by a comma. For example: "Write a blog post about Next.js, Research new front-end frameworks, Deploy the project to Vercel". Do not include any markdown, numbering, or bullet points.`;
 
     const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: 'user',
-          content: fullPrompt,
-        },
-      ],
-      model: 'llama-3.1-8b-instant', // Matching the model from your Next.js project
+      messages: [{ role: 'user', content: fullPrompt }],
+      model: 'llama-3.1-8b-instant',
       temperature: 0.5,
       max_tokens: 1024,
       top_p: 1,
@@ -48,10 +49,8 @@ export default async function handler(request: Request) {
       throw new Error('No content in AI response.');
     }
 
-    // Use the same response parsing as your Next.js project
     const tasks = content.split(',').map(task => task.trim()).filter(Boolean);
 
-    // Return the data in the format the frontend expects
     return new Response(JSON.stringify({ tasks }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
