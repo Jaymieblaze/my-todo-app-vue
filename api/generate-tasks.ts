@@ -6,8 +6,8 @@ export const config = {
   runtime: 'edge',
 };
 
-// ✅ FIX: Access the API key using import.meta.env for Edge Functions
-const groqApiKey = import.meta.env.GROQ_API_KEY;
+// ✅ FIX: Access the API key using process.env for Vercel serverless functions
+const groqApiKey = process.env.GROQ_API_KEY;
 
 // Initialize the Groq client with the correctly accessed key
 const groq = new Groq({
