@@ -22,6 +22,7 @@ A modern, feature-rich todo application built with Vue 3, TypeScript, Firebase, 
 - **State Management**: Pinia
 - **Routing**: Vue Router
 - **Deployment**: Vercel (with serverless functions)
+- **Serverless Functions**: @vercel/node
 
 ## 📋 Prerequisites
 
@@ -126,10 +127,14 @@ my-todo-app-vue/
 This app is configured for deployment on Vercel:
 
 1. Connect your GitHub repository to Vercel
-2. Set up environment variables in Vercel dashboard
+2. Set up environment variables in Vercel dashboard:
+   - Add all Firebase variables (VITE_API_KEY, VITE_AUTH_DOMAIN, etc.)
+   - Add GROQ_API_KEY for AI functionality
 3. Deploy automatically on push to main branch
 
 The `vercel.json` configuration handles both static site deployment and serverless API functions.
+
+**Important**: Make sure to set environment variables for all environments (Production, Preview, Development) in your Vercel dashboard for the AI assistant to work properly.
 
 ## 🤝 Contributing
 
